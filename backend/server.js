@@ -16,11 +16,13 @@ const relasiRoutes = require("./routes/relasiRoutes");
 const app = express();
 
 // ✅ Konfigurasi CORS yang Benar
-app.use(cors({
-  origin: "http://localhost:5173", // Ganti jika frontend di port berbeda
-  credentials: true,
-  allowedHeaders: ["Authorization", "Content-Type"], // ✅ Pastikan Authorization diizinkan
-}));
+app.use(
+  cors({
+    origin: "https://medipaws-expertsystem.vercel.app/", // Ganti jika frontend di port berbeda
+    credentials: true,
+    allowedHeaders: ["Authorization", "Content-Type"], // ✅ Pastikan Authorization diizinkan
+  })
+);
 
 app.use(bodyParser.json());
 
@@ -36,7 +38,7 @@ app.use("/api/relasi", relasiRoutes);
 
 // Jalankan Server
 const PORT = process.env.PORT || 5000;
-db.sync()  // Memastikan koneksi berhasil sebelum menjalankan server
+db.sync() // Memastikan koneksi berhasil sebelum menjalankan server
   .then(() => {
     console.log("Database Connected!");
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
