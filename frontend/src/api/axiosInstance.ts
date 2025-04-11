@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "https://medipaws-expert.my.id/api", // ✅ Base URL diatur di sini
+  baseURL: "http://medipaws-expert.my.id/api", // ✅ Base URL diatur di sini
   timeout: 10000, // ⏱️ Timeout 10 detik
   headers: {
     "Content-Type": "application/json",
