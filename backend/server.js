@@ -18,8 +18,8 @@ const app = express();
 // ✅ Konfigurasi CORS yang Benar
 app.use(
   cors({
-    origin: "https://medipaws-expertsystem.vercel.app", // Ganti jika frontend di port berbeda
-    credentials: true,
+    origin: "*", // Ganti jika frontend di port berbeda
+    credentials: false,
     allowedHeaders: ["Authorization", "Content-Type"], // ✅ Pastikan Authorization diizinkan
   })
 );
