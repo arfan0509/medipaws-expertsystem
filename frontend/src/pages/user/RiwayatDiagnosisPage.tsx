@@ -28,7 +28,11 @@ const RiwayatDiagnosisPage: React.FC = () => {
         const id_pasien = localStorage.getItem("id_pasien");
         if (id_pasien) {
           const response = await axiosInstance.get(`/diagnosis/${id_pasien}`);
-          const sortedData = sortDiagnoses(response.data, sortOrder);
+          const parsedData = response.data.map((item: any) => ({
+            ...item,
+            hasil_diagnosis: JSON.parse(item.hasil_diagnosis),
+          }));
+          const sortedData = sortDiagnoses(parsedData, sortOrder);
           setDiagnosisList(sortedData);
         }
       } catch (error) {
@@ -179,16 +183,20 @@ const RiwayatDiagnosisPage: React.FC = () => {
                       Gejala yang Dipilih
                     </h4>
                     <div className="flex flex-wrap gap-3 mt-2">
-                      {diagnosis.hasil_diagnosis.gejala_terdeteksi.map(
-                        (gejala: string, idx: number) => (
-                          <span
-                            key={idx}
-                            className="bg-[#4F81C7] text-white text-sm py-1 px-4 rounded-full shadow-sm"
-                          >
-                            {gejala}
-                          </span>
-                        )
-                      )}
+                      {diagnosis.hasil_diagnosis?.gejala_terdeteksi &&
+                        Array.isArray(
+                          diagnosis.hasil_diagnosis.gejala_terdeteksi
+                        ) &&
+                        diagnosis.hasil_diagnosis.gejala_terdeteksi.map(
+                          (gejala: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="bg-[#4F81C7] text-white text-sm py-1 px-4 rounded-full shadow-sm"
+                            >
+                              {gejala}
+                            </span>
+                          )
+                        )}
                     </div>
                   </div>
 

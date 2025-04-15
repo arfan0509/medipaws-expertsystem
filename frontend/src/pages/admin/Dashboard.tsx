@@ -14,16 +14,16 @@ import {
 import { FaVirus, FaHeartbeat, FaUser, FaStethoscope } from "react-icons/fa";
 
 const COLORS = [
-  "#2C5DA0", // Biru Gelap
-  "#4A8EDB", // Biru Muda
-  "#F28C38", // Oranye Profesional
-  "#3A945D", // Hijau Elegan
-  "#D9534F", // Merah Lembut
-  "#6C757D", // Abu-abu Netral
-  "#9467bd", // Ungu (opsional)
-  "#8c564b", // Coklat (opsional)
-  "#bcbd22", // Zaitun (opsional)
-  "#17becf", // Cyan (opsional)
+  "#2C5DA0",
+  "#4A8EDB",
+  "#F28C38",
+  "#3A945D",
+  "#D9534F",
+  "#6C757D",
+  "#9467bd",
+  "#8c564b",
+  "#bcbd22",
+  "#17becf",
 ];
 
 const Dashboard: React.FC = () => {
@@ -61,8 +61,16 @@ const Dashboard: React.FC = () => {
       setGejalaCount(gejalaRes.data.length);
       setPasienCount(pasienRes.data.length);
       setDiagnosisCount(diagnosisRes.data.length);
+      const parsedDiagnosis = diagnosisRes.data.map((d: any) => ({
+        ...d,
+        hasil_diagnosis:
+          typeof d.hasil_diagnosis === "string"
+            ? JSON.parse(d.hasil_diagnosis)
+            : d.hasil_diagnosis,
+      }));
+
       setLatestDiagnoses(
-        diagnosisRes.data
+        parsedDiagnosis
           .sort(
             (a: any, b: any) =>
               new Date(b.tanggal_diagnosis).getTime() -
@@ -74,25 +82,33 @@ const Dashboard: React.FC = () => {
       const penyakitFrequency: any = {};
       const gejalaFrequency: any = {};
 
-      diagnosisRes.data.forEach((d: any) => {
-        // Hitung frekuensi penyakit
-        penyakitFrequency[d.hasil_diagnosis.penyakit] =
-          (penyakitFrequency[d.hasil_diagnosis.penyakit] || 0) + 1;
+      parsedDiagnosis.forEach((d: any) => {
+        const hasil = d.hasil_diagnosis;
 
-        // Hitung frekuensi gejala
-        d.hasil_diagnosis.gejala_terdeteksi.forEach((g: string) => {
-          gejalaFrequency[g] = (gejalaFrequency[g] || 0) + 1;
-        });
+        if (hasil) {
+          const penyakit = hasil.penyakit;
+          if (penyakit && typeof penyakit === "string") {
+            penyakitFrequency[penyakit] =
+              (penyakitFrequency[penyakit] || 0) + 1;
+          }
+
+          const gejalaTerdeteksi = hasil.gejala_terdeteksi;
+          if (Array.isArray(gejalaTerdeteksi)) {
+            gejalaTerdeteksi.forEach((g: string) => {
+              if (g && typeof g === "string") {
+                gejalaFrequency[g] = (gejalaFrequency[g] || 0) + 1;
+              }
+            });
+          }
+        }
       });
 
-      // Tampilkan SEMUA penyakit (tanpa .slice(0,5))
       setTopPenyakit(
         Object.entries(penyakitFrequency)
           .map(([name, value]) => ({ name, value }))
           .sort((a, b) => (b.value as number) - (a.value as number))
       );
 
-      // Untuk gejala, tetap ambil 5 terbanyak (sesuai kebutuhan)
       setTopGejala(
         Object.entries(gejalaFrequency)
           .map(([name, value]) => ({ name, value: value as number }))
@@ -125,7 +141,11 @@ const Dashboard: React.FC = () => {
             count: gejalaCount,
             icon: <FaHeartbeat size={30} />,
           },
-          { label: "User", count: pasienCount, icon: <FaUser size={30} /> },
+          {
+            label: "User",
+            count: pasienCount,
+            icon: <FaUser size={30} />,
+          },
           {
             label: "Diagnosis",
             count: diagnosisCount,
@@ -167,7 +187,7 @@ const Dashboard: React.FC = () => {
                   <td className="p-3">
                     {new Date(d.tanggal_diagnosis).toLocaleDateString("id-ID")}
                   </td>
-                  <td className="p-3">{d.hasil_diagnosis.penyakit}</td>
+                  <td className="p-3">{d.hasil_diagnosis?.penyakit || "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -176,34 +196,36 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-10">
-        {/* Penyakit Paling Umum */}
         <div className="bg-white rounded-lg shadow-lg p-4">
           <h3 className="text-xl font-semibold text-[#4F81C7] mb-4">
             Penyakit Paling Umum
           </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={topPenyakit}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#4F81C7"
-                label
-              >
-                {topPenyakit.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* Custom legend untuk penyakit */}
+          {topPenyakit.length === 0 ? (
+            <p className="text-center text-gray-500">Belum ada data penyakit</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={topPenyakit}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#4F81C7"
+                  label
+                >
+                  {topPenyakit.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
           <div className="mt-4 flex flex-wrap">
             {topPenyakit.map((entry, index) => (
               <div key={index} className="flex items-center mr-4">
@@ -217,27 +239,29 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Gejala Paling Sering Muncul */}
         <div className="bg-white rounded-lg shadow-lg p-4">
           <h3 className="text-xl font-semibold text-[#4F81C7] mb-4">
             Gejala Paling Sering Muncul
           </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={topGejala}>
-              <XAxis dataKey="name" hide={true} />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value">
-                {topGejala.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          {/* Custom legend untuk gejala */}
+          {topGejala.length === 0 ? (
+            <p className="text-center text-gray-500">Belum ada data gejala</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={topGejala}>
+                <XAxis dataKey="name" hide={true} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value">
+                  {topGejala.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
           <div className="mt-4 flex flex-wrap">
             {topGejala.map((entry, index) => (
               <div key={index} className="flex items-center mr-4">

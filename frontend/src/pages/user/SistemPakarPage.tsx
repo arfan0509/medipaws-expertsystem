@@ -583,6 +583,7 @@ const SistemPakarPage: React.FC = () => {
               </div>
             )}
 
+            {/* Kode untuk bagian tampilan langkah perhitungan yang responsif */}
             <div className="mt-10">
               <button
                 className="w-full py-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-center font-semibold text-[#4F81C7] transition duration-300"
@@ -597,9 +598,13 @@ const SistemPakarPage: React.FC = () => {
                   <h3 className="text-xl font-bold mb-2">
                     Langkah Perhitungan:
                   </h3>
-                  <pre className="whitespace-pre-wrap text-gray-700 text-sm">
-                    {calcSteps}
-                  </pre>
+                  <div className="overflow-x-auto">
+                    <div className="bg-gray-50 p-3 rounded-lg shadow-inner">
+                      <pre className="whitespace-pre-wrap text-gray-700 text-xs sm:text-sm font-mono break-words max-w-full overflow-x-auto">
+                        {calcSteps}
+                      </pre>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

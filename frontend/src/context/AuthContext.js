@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             const refreshToken = localStorage.getItem("refreshToken");
             if (!refreshToken)
                 throw new Error("Refresh token tidak ditemukan");
-            const response = await axios.post("http://localhost:5000/api/auth/refresh-token", {
+            const response = await axios.post("https://api.medipaws-expert.my.id/api/auth/refresh-token", {
                 refreshToken,
             });
             const { accessToken } = response.data;

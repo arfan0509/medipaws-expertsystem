@@ -24,24 +24,28 @@ const LoadingModal = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-1/3 text-center">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-xs sm:max-w-sm md:max-w-md text-center">
         <div className="mb-4">
           {/* Progress bar container */}
-          <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative w-full h-4 sm:h-6 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full bg-[#4F81C7] transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <div className="mt-2 text-xl font-semibold text-[#4F81C7]">{progress}%</div>
+          <div className="mt-2 text-lg sm:text-xl font-semibold text-[#4F81C7]">
+            {progress}%
+          </div>
         </div>
-        <p className="text-lg font-semibold text-gray-700">Memproses Diagnosis...</p>
+        <p className="text-base sm:text-lg font-semibold text-gray-700">
+          Memproses Diagnosis...
+        </p>
 
         {/* Show the "Diagnosis selesai" message */}
         {showCompleteMessage && !completed && (
-          <div className="mt-4 text-green-600 text-xl font-bold">
-            <span className="text-2xl">✔</span> Diagnosis Selesai
+          <div className="mt-4 text-green-600 text-lg sm:text-xl font-bold">
+            <span className="text-xl sm:text-2xl">✔</span> Diagnosis Selesai
           </div>
         )}
       </div>

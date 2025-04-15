@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate, useLocation, } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/user/LoginPasienPage";
 import LoginAdminPage from "./pages/admin/LoginAdminPage";

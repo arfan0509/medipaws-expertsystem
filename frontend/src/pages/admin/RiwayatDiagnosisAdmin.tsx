@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
@@ -54,7 +55,25 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
   const fetchDiagnosis = async () => {
     try {
       const response = await axiosInstance.get("/diagnosis");
-      const sortedData = sortDiagnoses(response.data, sortOrder);
+
+      // Parse hasil_diagnosis kalau dia masih berupa string
+      const parsedData = response.data.map((item: any) => {
+        let hasil = item.hasil_diagnosis;
+        if (typeof hasil === "string") {
+          try {
+            hasil = JSON.parse(hasil);
+          } catch (e) {
+            console.warn("Gagal parsing hasil_diagnosis:", hasil);
+            hasil = null;
+          }
+        }
+        return {
+          ...item,
+          hasil_diagnosis: hasil,
+        };
+      });
+
+      const sortedData = sortDiagnoses(parsedData, sortOrder);
       setDiagnosisList(sortedData);
       setFilteredData(
         selectedPatient
@@ -82,11 +101,11 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
   const handleSearch = () => {
     const filtered = diagnosisList.filter(
       (item) =>
-        item.nama_kucing.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.hasil_diagnosis.penyakit
-          .toLowerCase()
+        item.nama_kucing?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.hasil_diagnosis?.penyakit
+          ?.toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
-        item.pasien.nama.toLowerCase().includes(searchQuery.toLowerCase())
+        item.pasien?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
     );
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -241,15 +260,19 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
                 <p className="flex items-center gap-2">
                   <FaExclamationTriangle className="text-[#4F81C7]" />
                   <strong>Penyakit:</strong>{" "}
-                  {diagnosis.hasil_diagnosis.penyakit}
+                  {diagnosis.hasil_diagnosis?.penyakit ?? "Tidak tersedia"}
                 </p>
                 <p className="flex items-center gap-2">
                   <FaNotesMedical className="text-[#4F81C7]" />
                   <strong>Gejala:</strong>{" "}
-                  {diagnosis.hasil_diagnosis.gejala_terdeteksi.join(", ")}
+                  {Array.isArray(diagnosis.hasil_diagnosis?.gejala_terdeteksi)
+                    ? diagnosis.hasil_diagnosis.gejala_terdeteksi.join(", ")
+                    : "Tidak tersedia"}
                 </p>
 
-                {diagnosis.hasil_diagnosis.kemungkinan_penyakit_lain &&
+                {Array.isArray(
+                  diagnosis.hasil_diagnosis?.kemungkinan_penyakit_lain
+                ) &&
                   diagnosis.hasil_diagnosis.kemungkinan_penyakit_lain.length >
                     0 && (
                     <div className="mt-4">

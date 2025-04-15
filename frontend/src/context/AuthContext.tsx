@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!refreshToken) throw new Error("Refresh token tidak ditemukan");
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/refresh-token",
+        "https://api.medipaws-expert.my.id/api/auth/refresh-token",
         {
           refreshToken,
         }
