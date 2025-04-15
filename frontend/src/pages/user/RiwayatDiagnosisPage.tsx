@@ -22,6 +22,9 @@ const RiwayatDiagnosisPage: React.FC = () => {
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
+  // Format number untuk menampilkan belief dengan benar
+  const formatNumber = (num: number) => parseFloat(num.toFixed(2)).toString();
+
   useEffect(() => {
     const fetchDiagnosis = async () => {
       try {
@@ -158,23 +161,49 @@ const RiwayatDiagnosisPage: React.FC = () => {
                   </div>
 
                   {/* 💉 Diagnosis Utama */}
-                  <div className="bg-[#4F81C7] text-white py-5 px-6 rounded-lg shadow-lg mb-6 flex justify-between items-center">
-                    <div>
-                      <h3 className="text-3xl font-bold flex items-center">
-                        <FaStethoscope className="mr-3" />
-                        {diagnosis.hasil_diagnosis.penyakit}
-                      </h3>
-                      <p className="text-sm opacity-80">
-                        Hasil diagnosis utama
-                      </p>
+                  <div className="bg-[#4F81C7] text-white py-5 px-6 rounded-lg shadow-lg mb-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-3xl font-bold flex items-center">
+                          <FaStethoscope className="mr-3" />
+                          {diagnosis.hasil_diagnosis.penyakit}
+                        </h3>
+                        <p className="text-sm opacity-80 mt-1">
+                          Hasil diagnosis utama
+                        </p>
+
+                        {/* Tampilkan nilai belief di diagnosis utama jika tersedia */}
+                        {diagnosis.hasil_diagnosis.belief && (
+                          <div className="mt-3 bg-white bg-opacity-20 px-3 py-1 rounded-full inline-block">
+                            <p className="text-sm font-semibold">
+                              Persentase kemungkinan:{" "}
+                              {formatNumber(diagnosis.hasil_diagnosis.belief)}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handlePrint(diagnosis)}
+                        className="bg-white text-[#4F81C7] rounded-full p-3 shadow hover:bg-gray-200 transition"
+                        title="Cetak Diagnosis"
+                      >
+                        <FiPrinter size={24} />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handlePrint(diagnosis)}
-                      className="bg-white text-[#4F81C7] rounded-full p-3 shadow hover:bg-gray-200 transition"
-                      title="Cetak Diagnosis"
-                    >
-                      <FiPrinter size={24} />
-                    </button>
+
+                    {/* Progress bar untuk menampilkan belief secara visual */}
+                    {diagnosis.hasil_diagnosis.belief && (
+                      <div className="mt-4">
+                        <div className="w-full bg-white bg-opacity-30 rounded-full h-3">
+                          <div
+                            className="bg-green-400 h-3 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${diagnosis.hasil_diagnosis.belief}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* 📝 Gejala Dipilih */}
@@ -219,7 +248,12 @@ const RiwayatDiagnosisPage: React.FC = () => {
                           onClick={() => toggleDropdown(index)}
                           className="w-full flex justify-between items-center text-[#4F81C7] font-semibold text-lg bg-gray-100 py-2 px-4 rounded-lg hover:bg-gray-200 transition"
                         >
-                          Kemungkinan Penyakit Lain
+                          Kemungkinan Penyakit Lain (
+                          {
+                            diagnosis.hasil_diagnosis.kemungkinan_penyakit_lain
+                              .length
+                          }
+                          )
                           {expandedIndex === index ? (
                             <FiChevronUp size={20} />
                           ) : (
@@ -235,18 +269,44 @@ const RiwayatDiagnosisPage: React.FC = () => {
                                   key={idx}
                                   className="bg-gray-100 p-4 rounded-lg shadow-sm"
                                 >
-                                  <h5 className="text-lg font-semibold text-[#4F81C7] flex items-center">
-                                    <FaHeartbeat className="mr-2" />
-                                    {penyakit.penyakit}
-                                  </h5>
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h5 className="text-lg font-semibold text-[#4F81C7] flex items-center">
+                                      <FaHeartbeat className="mr-2" />
+                                      {penyakit.penyakit}
+                                    </h5>
+                                    <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                                      Persentase kemungkinan: {formatNumber(penyakit.belief)}
+                                      %
+                                    </div>
+                                  </div>
+                                  <p className="text-gray-600 mt-2">
+                                    <strong>Deskripsi:</strong>{" "}
+                                    {penyakit.deskripsi}
+                                  </p>
                                   <p className="text-gray-600 mt-2">
                                     <strong>Gejala Terdeteksi:</strong>{" "}
                                     {penyakit.gejalaCocok &&
-                                    Array.isArray(penyakit.gejalaCocok)
-                                      ? penyakit.gejalaCocok.join(", ")
-                                      : "Tidak tersedia"}
+                                    Array.isArray(penyakit.gejalaCocok) ? (
+                                      <div className="flex flex-wrap gap-2 mt-2">
+                                        {penyakit.gejalaCocok.map(
+                                          (
+                                            gejala: string,
+                                            gejalaIdx: number
+                                          ) => (
+                                            <span
+                                              key={gejalaIdx}
+                                              className="bg-[#4F81C7] bg-opacity-70 text-white text-xs py-1 px-3 rounded-full"
+                                            >
+                                              {gejala}
+                                            </span>
+                                          )
+                                        )}
+                                      </div>
+                                    ) : (
+                                      "Tidak tersedia"
+                                    )}
                                   </p>
-                                  <p className="text-gray-600">
+                                  <p className="text-gray-600 mt-3">
                                     <strong>Solusi:</strong> {penyakit.solusi}
                                   </p>
                                 </div>

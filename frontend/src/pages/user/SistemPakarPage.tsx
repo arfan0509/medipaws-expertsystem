@@ -258,18 +258,16 @@ const SistemPakarPage: React.FC = () => {
       return;
     }
 
-    // Buat hasil akhir (dalam persen) berdasarkan m_comb
-    const results = Object.entries(m_comb)
+    // Filter hasil hanya untuk penyakit tunggal (tidak ada koma)
+    let filteredResults = Object.entries(m_comb)
+      .filter(([key]) => !key.includes(",") && key !== "Θ") // Filter hanya penyakit tunggal dan bukan theta
       .map(([key, mass]) => {
         const belief = round4(mass * 100);
-        // Ambil data penyakit berdasarkan entri pertama (jika key merupakan hipotesis gabungan)
-        const diseases = key.split(",");
-        const penyakitObj = penyakitList.find(
-          (p) => p.nama === diseases[0]
-        ) || {
+        const penyakitObj = penyakitList.find((p) => p.nama === key) || {
           deskripsi: "Tidak tersedia",
           solusi: "Tidak tersedia",
         };
+
         return {
           penyakit: key,
           belief: belief,
@@ -278,20 +276,26 @@ const SistemPakarPage: React.FC = () => {
           gejalaCocok: getMatchingSymptoms(key),
         };
       })
-      .sort((a, b) => b.belief - a.belief);
+      .sort((a, b) => b.belief - a.belief); // Urutkan berdasarkan keyakinan tertinggi
 
-    steps += `Hasil diagnosa sementara: ${JSON.stringify(results)}\n\n`;
+    steps += `Hasil diagnosa (hanya penyakit tunggal): ${JSON.stringify(
+      filteredResults
+    )}\n\n`;
 
-    if (results.length === 0) {
-      alert("Tidak ada penyakit yang cocok dengan gejala yang dipilih.");
+    if (filteredResults.length === 0) {
+      alert(
+        "Tidak ada penyakit tunggal yang cocok dengan gejala yang dipilih."
+      );
       return;
     }
 
-    // Ambil hasil dengan keyakinan tertinggi (jika ada tie, tampilkan semuanya)
-    const maxBeliefValue = results[0].belief;
-    const ties = results.filter((item) => item.belief === maxBeliefValue);
-    const finalResults = ties.length > 1 ? ties : [results[0]];
-    steps += `Final results: ${JSON.stringify(finalResults)}\n`;
+    // Ambil hasil dengan keyakinan tertinggi sebagai diagnosa utama
+    const mainDiagnosis = filteredResults[0];
+    // Semua hasil lainnya akan masuk ke dropdown "Penyakit Lainnya"
+    const otherDiagnoses = filteredResults.slice(1);
+
+    steps += `Final results (main): ${JSON.stringify(mainDiagnosis)}\n`;
+    steps += `Other diagnoses count: ${otherDiagnoses.length}\n`;
     setCalcSteps(steps);
 
     // Tampilkan loading dan simulasikan proses, baru tampilkan hasil diagnosis
@@ -299,8 +303,7 @@ const SistemPakarPage: React.FC = () => {
     setDone(false);
 
     try {
-      // Buat payload diagnosis ke backend
-      const mainDiagnosis = finalResults[0];
+      // Modifikasi agar hasil_diagnosis termasuk belief dan penyakit lainnya
       const diagnosisData = {
         id_pasien: localStorage.getItem("id_pasien"),
         nama_kucing: kucingData.nama,
@@ -309,22 +312,32 @@ const SistemPakarPage: React.FC = () => {
         warna_bulu: kucingData.warnaBulu,
         hasil_diagnosis: {
           penyakit: mainDiagnosis.penyakit,
+          belief: mainDiagnosis.belief,
           solusi: mainDiagnosis.solusi,
           deskripsi: mainDiagnosis.deskripsi,
           gejala_terdeteksi: mainDiagnosis.gejalaCocok,
+          kemungkinan_penyakit_lain: otherDiagnoses.map((diagnosis) => ({
+            penyakit: diagnosis.penyakit,
+            belief: diagnosis.belief,
+            solusi: diagnosis.solusi,
+            deskripsi: diagnosis.deskripsi,
+            gejalaCocok: diagnosis.gejalaCocok,
+          })),
         },
       };
 
+      console.log("Data yang akan dikirim ke backend:", diagnosisData);
+
       await axiosInstance.post("/diagnosis/tambah", diagnosisData);
 
-      // Simulasikan proses selesai dengan timeout, baru hasil muncul
+      // Simulasikan proses selesai dengan timeout, baru tampilkan hasil diagnosis
       setTimeout(() => {
         setDone(true);
         setTimeout(() => setLoading(false), 2000);
       }, 3000);
 
-      // Simpan hasil diagnosa agar muncul setelah proses selesai
-      setHasilDiagnosa(finalResults);
+      // Simpan hasil diagnosa utama dan semua kemungkinan lainnya yang berupa penyakit tunggal
+      setHasilDiagnosa([mainDiagnosis, ...otherDiagnoses]);
     } catch (error) {
       console.error("Error saving diagnosis:", error);
       alert("Gagal menyimpan diagnosis.");
@@ -471,7 +484,7 @@ const SistemPakarPage: React.FC = () => {
                 />
               </div>
               <p className="mt-2 text-sm">
-                Keyakinan:{" "}
+                Kemungkinan:{" "}
                 <strong>{formatNumber(hasilDiagnosa[0].belief)}%</strong>
               </p>
             </div>
@@ -520,7 +533,9 @@ const SistemPakarPage: React.FC = () => {
                 >
                   {showOtherPenyakit
                     ? "🔼 Sembunyikan Penyakit Lainnya"
-                    : "🔽 Tampilkan Penyakit Lainnya"}
+                    : `🔽 Tampilkan Penyakit Lainnya (${
+                        hasilDiagnosa.length - 1
+                      })`}
                 </button>
                 {showOtherPenyakit && (
                   <div className="grid gap-6 mt-6">
@@ -541,7 +556,7 @@ const SistemPakarPage: React.FC = () => {
                               </h3>
                               <div className="text-right">
                                 <p className="text-sm text-gray-500">
-                                  Keyakinan:{" "}
+                                  Kemungkinan:{" "}
                                   <strong>{formatNumber(belief)}%</strong>
                                 </p>
                                 <div className="w-full bg-gray-300 rounded-full h-2 mt-1">
