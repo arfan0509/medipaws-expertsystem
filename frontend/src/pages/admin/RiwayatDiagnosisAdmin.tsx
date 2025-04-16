@@ -16,6 +16,9 @@ import {
   FaExclamationTriangle,
   FaNotesMedical,
   FaClock,
+  FaChartBar,
+  FaHeartbeat,
+  FaMedkit,
 } from "react-icons/fa";
 import {
   FiChevronUp,
@@ -47,6 +50,9 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
   const [patients, setPatients] = useState<any[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<any>(null);
+
+  // Format number untuk menampilkan belief dengan benar
+  const formatNumber = (num: number) => parseFloat(num.toFixed(2)).toString();
 
   useEffect(() => {
     fetchDiagnosis();
@@ -256,19 +262,84 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
 
                 <div className="border-t border-gray-300 my-2"></div>
 
-                {/* Hasil Diagnosis */}
-                <p className="flex items-center gap-2">
-                  <FaExclamationTriangle className="text-[#4F81C7]" />
-                  <strong>Penyakit:</strong>{" "}
-                  {diagnosis.hasil_diagnosis?.penyakit ?? "Tidak tersedia"}
-                </p>
+                {/* Hasil Diagnosis - Versi yang sudah diperbaiki untuk mobile */}
+                <div className="bg-[#4F81C7] text-white p-4 rounded-lg shadow-sm">
+                  {/* Judul Penyakit */}
+                  <p className="flex items-center gap-2 font-semibold text-lg mb-2">
+                    <FaExclamationTriangle />
+                    {diagnosis.hasil_diagnosis?.penyakit ?? "Tidak tersedia"}
+                  </p>
+
+                  {/* Tampilkan nilai belief di bawah judul, bukan di samping */}
+                  {diagnosis.hasil_diagnosis?.belief && (
+                    <div className="mt-1 mb-2">
+                      <div className="flex items-center gap-1 text-sm">
+                        <FaChartBar className="text-white" />
+                        <span>
+                          Kemungkinan:{" "}
+                          {formatNumber(diagnosis.hasil_diagnosis.belief)}%
+                        </span>
+                      </div>
+
+                      {/* Progress bar untuk belief */}
+                      <div className="mt-1">
+                        <div className="w-full bg-white bg-opacity-30 rounded-full h-2">
+                          <div
+                            className="bg-green-400 h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${diagnosis.hasil_diagnosis.belief}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Deskripsi penyakit */}
+                  {diagnosis.hasil_diagnosis?.deskripsi && (
+                    <p className="text-sm mt-2 text-white text-opacity-90">
+                      <strong>Deskripsi:</strong>{" "}
+                      {diagnosis.hasil_diagnosis.deskripsi}
+                    </p>
+                  )}
+                </div>
+
                 <p className="flex items-center gap-2">
                   <FaNotesMedical className="text-[#4F81C7]" />
                   <strong>Gejala:</strong>{" "}
-                  {Array.isArray(diagnosis.hasil_diagnosis?.gejala_terdeteksi)
-                    ? diagnosis.hasil_diagnosis.gejala_terdeteksi.join(", ")
-                    : "Tidak tersedia"}
                 </p>
+
+                {/* Gejala terdeteksi dengan tampilan yang lebih baik */}
+                <div className="flex flex-wrap gap-2 pl-6">
+                  {Array.isArray(
+                    diagnosis.hasil_diagnosis?.gejala_terdeteksi
+                  ) &&
+                    diagnosis.hasil_diagnosis.gejala_terdeteksi.map(
+                      (gejala: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="bg-[#E3F2FD] text-[#4F81C7] text-sm py-1 px-3 rounded-full"
+                        >
+                          {gejala}
+                        </span>
+                      )
+                    )}
+                </div>
+
+                {/* Solusi */}
+                <p className="flex items-center gap-2">
+                  <FaMedkit className="text-[#4F81C7]" />
+                  <strong>Solusi:</strong>{" "}
+                </p>
+
+                {/* Solusi text dengan format yang sama seperti gejala */}
+                <div className="flex flex-wrap gap-2 pl-6">
+                  {diagnosis.hasil_diagnosis?.solusi && (
+                    <span className="text-gray-700">
+                      {diagnosis.hasil_diagnosis.solusi}
+                    </span>
+                  )}
+                </div>
 
                 {Array.isArray(
                   diagnosis.hasil_diagnosis?.kemungkinan_penyakit_lain
@@ -280,7 +351,12 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
                         onClick={() => toggleDropdown(index)}
                         className="w-full flex justify-between items-center text-[#4F81C7] font-semibold bg-gray-200 py-2 px-4 rounded-lg hover:bg-gray-300 transition"
                       >
-                        Kemungkinan Penyakit Lain
+                        Kemungkinan Penyakit Lain (
+                        {
+                          diagnosis.hasil_diagnosis.kemungkinan_penyakit_lain
+                            .length
+                        }
+                        )
                         {expandedIndex === index ? (
                           <FiChevronUp size={20} />
                         ) : (
@@ -296,17 +372,62 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
                                 key={idx}
                                 className="bg-white p-3 rounded-lg border border-[#4F81C7] shadow-md"
                               >
-                                <p>
-                                  <strong>Penyakit:</strong> {penyakit.penyakit}
+                                <p className="font-semibold text-[#4F81C7] flex items-center gap-1 mb-1">
+                                  <FaHeartbeat />
+                                  {penyakit.penyakit}
                                 </p>
-                                <p>
-                                  <strong>Gejala Terdeteksi:</strong>{" "}
+
+                                {/* Belief di bawah nama penyakit, bukan di samping */}
+                                {penyakit.belief && (
+                                  <div className="mb-2">
+                                    <div className="flex items-center gap-1 text-xs text-yellow-800 mt-1">
+                                      <FaChartBar className="text-yellow-800" />
+                                      Kemungkinan:{" "}
+                                      {formatNumber(penyakit.belief)}%
+                                    </div>
+                                    <div className="w-full bg-yellow-100 rounded-full h-1.5 mt-1">
+                                      <div
+                                        className="bg-yellow-500 h-1.5 rounded-full"
+                                        style={{
+                                          width: `${penyakit.belief}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {penyakit.deskripsi && (
+                                  <p className="text-sm mt-1">
+                                    <strong>Deskripsi:</strong>{" "}
+                                    {penyakit.deskripsi}
+                                  </p>
+                                )}
+
+                                <p className="text-sm mt-2">
+                                  <strong>Gejala Terdeteksi:</strong>
+                                </p>
+
+                                <div className="flex flex-wrap gap-1 mt-1">
                                   {penyakit.gejalaCocok &&
-                                  Array.isArray(penyakit.gejalaCocok)
-                                    ? penyakit.gejalaCocok.join(", ")
-                                    : "Tidak tersedia"}
-                                </p>
-                                <p>
+                                  Array.isArray(penyakit.gejalaCocok) ? (
+                                    penyakit.gejalaCocok.map(
+                                      (gejala: string, gejalaIdx: number) => (
+                                        <span
+                                          key={gejalaIdx}
+                                          className="bg-blue-50 text-blue-700 text-xs py-1 px-2 rounded-full"
+                                        >
+                                          {gejala}
+                                        </span>
+                                      )
+                                    )
+                                  ) : (
+                                    <span className="text-gray-500 text-sm">
+                                      Tidak tersedia
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="text-sm mt-2">
                                   <strong>Solusi:</strong> {penyakit.solusi}
                                 </p>
                               </div>
@@ -379,7 +500,6 @@ const RiwayatDiagnosisAdmin: React.FC = () => {
         onSave={handleEditSave}
         data={selectedDiagnosis}
       />
-      ;
       {diagnosisToDelete && (
         <ModalKonfirmasi
           isOpen={isDeleteModalOpen}
